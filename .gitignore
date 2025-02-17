@@ -1,4 +1,4 @@
 __pycache__/
 .ipynb_checkpoints
-/songgen/
+/songgen/modeling_songgen_dual_track.py
 /training/
