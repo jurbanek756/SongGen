@@ -4,7 +4,8 @@ from transformers.models.encodec.modeling_encodec import EncodecDecoderOutput, E
 from .configuration_xcodec import XCodecConfig
 import torch.nn as nn
 import sys
-sys.path.append('./xcodec')
+import os 
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'xcodec'))
 from omegaconf import OmegaConf
 from models.soundstream_semantic import SoundStream
 
@@ -21,8 +22,8 @@ class XCodecModel(nn.Module):
 
     def __init__(self):
         super().__init__()
-        ckpt_path = './xcodec/ckpts/general_more/xcodec_hubert_general_audio_v2.pth'
-        config_path = './xcodec/ckpts/general_more/config_hubert_general.yaml'
+        ckpt_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'xcodec/ckpts/general_more/xcodec_hubert_general_audio_v2.pth')
+        config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'./xcodec/ckpts/general_more/config_hubert_general.yaml')
         config = OmegaConf.load(config_path)
         self.model = build_codec_model(config)
         parameter_dict = torch.load(ckpt_path)

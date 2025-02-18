@@ -1,12 +1,3 @@
-#modeling_parler_tts_our2_lyECross_xcodec
-#在modeling_parler_tts_our.py(兼容ref_audio 和 ref_vocie)的基础上 加上 lyrics_prenet 和 time_embedding的选项
-#与modeling_parler_tts_our0 同步：可以兼容 prompt、 ref_audio 任意有无的情况； 修正了generate, 可以续写
-#增加 transformer-based lyrics encoder， 并且作为cross_attention (是否兼容prepend lyrics？)
-#兼容 cross_attention 时 text_description 的有无; 当无 text_description的时候, 将 text_description改为 'Lyrics:'
-#增加 vocal_predict_head 计算target_audio中的vocal_loss
-#当ref_voice为全0的时候, attention mask改为全0
-#修改audio_decoder 为 xcodec  和 generate 
-
 # coding=utf-8
 # Copyright 2024 The HuggingFace Inc. team. All rights reserved.
 #
@@ -43,6 +34,7 @@ from transformers.cache_utils import (
     StaticCache,
 )
 from transformers.generation.configuration_utils import GenerationConfig
+from transformers.generation.configuration_utils import GenerationConfig, GenerationMode
 from transformers.generation.logits_process import LogitsProcessorList
 from transformers.generation.stopping_criteria import StoppingCriteriaList
 from transformers.modeling_attn_mask_utils import (
@@ -53,8 +45,7 @@ from transformers.modeling_attn_mask_utils import (
 from transformers.modeling_outputs import (
     BaseModelOutput,
     BaseModelOutputWithPastAndCrossAttentions,
-    ModelOutput,
-    
+    ModelOutput,   
 )
 
 from .custom_modeling_outputs import(
@@ -72,11 +63,9 @@ from transformers.utils.import_utils import is_flash_attn_2_available, is_flash_
 
 from .configuration_songgen import SongGenConfig, SongGenDecoderConfig
 from .xcodec_wrapper import XCodecConfig, XCodecModel
-from .lyrics_encoder import ConformerEncoder
+from .lyrics_utils.lyrics_encoder import ConformerEncoder
 from .logits_processors import SongGenLogitsProcessor
 
-# AutoConfig.register("xcodec", XCodecConfig)
-# AutoModel.register(XCodecConfig, XCodecModel)
 
 if TYPE_CHECKING:
     from transformers.generation.streamers import BaseStreamer
@@ -1722,7 +1711,7 @@ class SongGenForCausalLM(SongGenPreTrainedModel):
 
         self.num_codebooks = config.num_codebooks
         self.track_pattern = getattr(config, 'track_pattern', 'mixed')
-        if self.track_pattern.startswith('parallel')::
+        if self.track_pattern.startswith('parallel'):
             self.num_heads = config.num_codebooks * 2
         else:
             self.num_heads = config.num_codebooks
@@ -2064,7 +2053,6 @@ class SongGenForCausalLM(SongGenPreTrainedModel):
                     - [`~generation.GenerateEncoderDecoderOutput`],
                     - [`~generation.GenerateBeamEncoderDecoderOutput`]
         """
-        # pdb.set_trace()
         # 1. Handle `generation_config` and kwargs that might update it, and validate the resulting objects
         if generation_config is None:
             generation_config = self.generation_config
@@ -2100,18 +2088,16 @@ class SongGenForCausalLM(SongGenPreTrainedModel):
         )
         batch_size = input_ids.shape[0] // self.num_codebooks
         kwargs_has_attention_mask = model_kwargs.get("attention_mask", None) is not None
-        # pdb.set_trace()
         self._prepare_special_tokens(generation_config, kwargs_has_attention_mask, device=input_ids.device)
 
         # 4. Define other model kwargs
         model_kwargs["use_cache"] = generation_config.use_cache
-        # pdb.set_trace()
         requires_attention_mask = "encoder_outputs" not in model_kwargs
         if model_kwargs.get("attention_mask", None) is None and requires_attention_mask:
             model_kwargs["attention_mask"] = self._prepare_attention_mask_for_generation(
                 input_ids, generation_config.pad_token_id, generation_config.eos_token_id
             )
-        # pdb.set_trace()
+
         # 5. Prepare `max_length` depending on other stopping criteria.
         input_ids_seq_length = input_ids.shape[-1]
         has_default_max_length = kwargs.get("max_length") is None and generation_config.max_length is not None
@@ -2144,7 +2130,6 @@ class SongGenForCausalLM(SongGenPreTrainedModel):
 
         # 6. Prepare `input_ids` which will be used for auto-regressive generation
         # Build the delay pattern mask for offsetting each codebook prediction by 1 
-        # pdb.set_trace()
         input_ids, delay_pattern_mask = self.build_delay_pattern_mask(
             input_ids,
             bos_token_id=generation_config.bos_token_id,
@@ -2321,7 +2306,7 @@ class SongGenMixedForConditionalGeneration(PreTrainedModel):
             from transformers.models.auto.modeling_auto import AutoModelForTextEncoding
             text_encoder = AutoModelForTextEncoding.from_config(config.text_encoder)
 
-        if audio_encoder is None: #NOTE 这边对吗？
+        if audio_encoder is None:
            audio_encoder = XCodecModel()
 
         if decoder is None:
@@ -3523,7 +3508,7 @@ class SongGenMixedForConditionalGeneration(PreTrainedModel):
             model_kwargs = self._prepare_prompt_kwargs_for_generation(
                 model_kwargs.pop("prompt_input_ids"),
                 model_kwargs,
-            )
+            )       
        
 
         if "decoder_input_ids" not in model_kwargs and "input_values" in model_kwargs:
@@ -3589,7 +3574,7 @@ class SongGenMixedForConditionalGeneration(PreTrainedModel):
                 )
         # Use DynamicCache() instance by default. This will avoid back and forth from legacy format that
         # keeps copying the cache thus using much more memory
-        elif generation_config.cache_implementation is None and self._supports_default_dynamic_cache(): #NOTE here
+        elif generation_config.cache_implementation is None and self._supports_default_dynamic_cache(): 
             past = model_kwargs.get("past_key_values", None)
             requires_cross_attention_cache = (
                 self.config.is_encoder_decoder or model_kwargs.get("encoder_outputs") is not None
@@ -3622,16 +3607,18 @@ class SongGenMixedForConditionalGeneration(PreTrainedModel):
             streamer.put(delayed_input_ids.cpu())
 
         # 7. determine generation mode
-        is_greedy_gen_mode = (
-            (generation_config.num_beams == 1)
-            and (generation_config.num_beam_groups == 1)
-            and generation_config.do_sample is False
-        )
-        is_sample_gen_mode = (
-            (generation_config.num_beams == 1)
-            and (generation_config.num_beam_groups == 1)
-            and generation_config.do_sample is True
-        )
+        generation_mode = generation_config.get_generation_mode()
+        logger.info(f'generation_mode: {generation_mode}')
+        # is_greedy_gen_mode = (
+        #     (generation_config.num_beams == 1)
+        #     and (generation_config.num_beam_groups == 1)
+        #     and generation_config.do_sample is False
+        # )
+        # is_sample_gen_mode = (
+        #     (generation_config.num_beams == 1)
+        #     and (generation_config.num_beam_groups == 1)
+        #     and generation_config.do_sample is True
+        # )
 
         # 8. prepare distribution pre_processing samplers
         logits_processor = self._get_logits_processor(
@@ -3647,29 +3634,9 @@ class SongGenMixedForConditionalGeneration(PreTrainedModel):
         stopping_criteria = self._get_stopping_criteria(
             generation_config=generation_config, stopping_criteria=stopping_criteria
         )
-        
-        if is_greedy_gen_mode:
-            if generation_config.num_return_sequences > 1:
-                raise ValueError(
-                    "num_return_sequences has to be 1 when doing greedy search, "
-                    f"but is {generation_config.num_return_sequences}."
-                )
 
-            # 10. run greedy search
-            outputs = self._sample(
-                delayed_input_ids,
-                logits_processor=logits_processor,
-                stopping_criteria=stopping_criteria,
-                generation_config=generation_config,
-                synced_gpus=synced_gpus,
-                streamer=streamer,
-                **model_kwargs,
-            )
-
-        elif is_sample_gen_mode: 
-            # 10. prepare logits warper
-            logits_warper = self._get_logits_warper(generation_config, device=input_ids.device)
-
+        if generation_mode in (GenerationMode.SAMPLE, GenerationMode.GREEDY_SEARCH):
+            logits_warper = self._get_logits_warper(generation_config, device=delayed_input_ids.device)
             # expand input_ids with `num_return_sequences` additional sequences per batch
             delayed_input_ids, model_kwargs = self._expand_inputs_for_generation(
                 input_ids=delayed_input_ids,
@@ -3678,15 +3645,8 @@ class SongGenMixedForConditionalGeneration(PreTrainedModel):
                 **model_kwargs,
             )
 
-            # 11. run sample
-            #NOTE https://github.com/huggingface/transformers/blob/e259d6d1e0d2acfa3c2f84b11c9bfa97e64b984d/src/transformers/generation/utils.py#L1381C4-L1403C30
-            # """Calculates `cache_position` for the pre-fill stage based on `input_ids` and optionally past length"""
-            # # `torch.compile`-friendly `torch.arange` from a shape -- the lines below are equivalent to `torch.arange`
-            # if "inputs_embeds" in model_kwargs:
-            #     cache_position = torch.ones_like(model_kwargs["inputs_embeds"][0, :, 0], dtype=torch.int64).cumsum(0) - 1
-            # else:
-            #     cache_position = torch.ones_like(input_ids[0, :], dtype=torch.int64).cumsum(0) - 1
-            outputs = self._sample(  
+            # 10. run sample
+            outputs = self._sample(
                 delayed_input_ids,
                 logits_processor=logits_processor,
                 logits_warper=logits_warper,
@@ -3696,14 +3656,13 @@ class SongGenMixedForConditionalGeneration(PreTrainedModel):
                 streamer=streamer,
                 **model_kwargs,
             )
-
         else:
             raise ValueError(
                 "Got incompatible mode for generation, should be one of greedy or sampling. "
                 "Ensure that beam search is de-activated by setting `num_beams=1` and `num_beam_groups=1`."
             )
 
-        # pdb.set_trace()
+        
         if generation_config.return_dict_in_generate:
             output_ids = outputs.sequences
         else:
@@ -3714,7 +3673,6 @@ class SongGenMixedForConditionalGeneration(PreTrainedModel):
         output_ids = self.decoder.apply_delay_pattern_mask(output_ids, model_kwargs["decoder_delay_pattern_mask"])
 
         # Revert the pattern delay mask by filtering the eos and bos token ids from the delay pattern mask
-        # pdb.set_trace()
         _, mask = self.decoder.build_delay_pattern_mask(
             input_ids,
             bos_token_id=generation_config.bos_token_id,

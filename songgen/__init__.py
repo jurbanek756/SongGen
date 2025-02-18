@@ -12,9 +12,17 @@ from .modeling_songgen_mixed import (
     build_delay_pattern_mask,
 )
 
-from .streamer import SongGenStreamer
+from .modeling_songgen_dual_track import (
+    SongGenDualTrakForConditionalGeneration,
+    split_combined_track_input_ids,
+    build_combined_delay_pattern_mask,
+)
 
-from .tokenizer_xtts import VoiceBpeTokenizer
+from .processing_songgen import SongGenProcessor
+
+# from .streamer import SongGenStreamer
+
+from .lyrics_utils.lyrics_tokenizer import VoiceBpeTokenizer
 
 AutoConfig.register("xcodec", XCodecConfig)
 AutoModel.register(XCodecConfig, XCodecModel)

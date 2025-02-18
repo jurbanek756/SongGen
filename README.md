@@ -13,7 +13,7 @@
 <a href="https://myownskyw7.github.io/">Jiaqi Wang</a> 
 </p>
 
-<p align="center" style="font-size: em; margin-top: 0.5em">
+<p align="center" style="font-size: 5 em; margin-top: 0.5em">
 <a href=""><img src="https://img.shields.io/badge/arXiv-<color>"></a>
 <a href="https://github.com/LiuZH-19/SongGen"><img src="https://img.shields.io/badge/Code-red"></a>
 <a href="https://liuzh-19.github.io/SongGen/"><img src="https://img.shields.io/badge/Demo-yellow"></a>
@@ -24,7 +24,7 @@
 
 
 ## 📜 News
-🚀 [2025/2/14] The [paper]() and [demo page](https://liuzh-19.github.io/SongGen/) are released!
+🚀 [2025/2/19] The [paper]() and [demo page](https://liuzh-19.github.io/SongGen/) are released!
 
 ## 💡 Highlights
 - 🔥We introduce SongGen, a **single-stage** auto-regressive transformer for **text-to-song** generation, offering versatile control via lyrics, descriptive text, and an optional reference voice.
@@ -39,8 +39,104 @@
 - [ ] Release annotated data and preprocessing pipeline
 - [ ] Release SongGen training code
 - [ ] Develop an audio upsampling renderer
-- [ ] Release SongGen inference code and model checkpoints
+- [ ] Release SongGen checkpoints
+- [x] Release SongGen inference code 
 - [x] SongGen demo
+
+## 🛠️ Usage
+
+### 1. Install environment and dependencies
+```bash
+git clone https://github.com/LiuZH-19/SongGen.git
+cd SongGen
+# We recommend using conda to create a new environment.
+conda create -n songgen python=3.9.18 
+conda activate songgen
+# install cuda >= 11.8
+conda install pytorch torchvision torchaudio cudatoolkit=11.8 -c pytorch -c nvidia
+```
+To use SongGen only in inference mode, install it using:
+```bash
+pip install .
+```
+### 2. Download the xcodec and songgen checkpoints
+
+
+### 3. Run the inference
+
+#### (1). Mixed Pro Mode
+
+```python
+import torch
+import os
+from songgen import (
+    VoiceBpeTokenizer,
+    SongGenMixedForConditionalGeneration,
+    SongGenProcessor
+)
+import soundfile as sf
+
+ckpt_path = "..." # Path to the pretrained model
+device = "cuda:0" if torch.cuda.is_available() else "cpu"
+model = SongGenMixedForConditionalGeneration.from_pretrained(
+    ckpt_path,
+    attn_implementation='sdpa').to(device)
+processor = SongGenProcessor(ckpt_path, device)
+
+# Define input text and lyrics
+lyrics = "..." # The lyrics text
+text="..." # The music description text
+ref_voice_path = 'path/to/your/reference_audio.wav' # Path to reference audio, optional
+separate= True # Whether to separate the vocal track from the reference voice audio
+
+model_inputs = processor(text=text, lyrics=lyrics, ref_voice_path=ref_voice_path, separate=True) 
+generation = model.generate(**model_inputs,
+                do_sample=True,
+            )
+audio_arr = generation.cpu().numpy().squeeze()
+sf.write("songgen_out.wav", audio_arr, model.config.sampling_rate)
+```
+
+
+
+#### (2). Interleaving A-V  (Dual-track mode)
+```python
+import torch
+import os
+from songgen import (
+    VoiceBpeTokenizer,
+    SongGenDualTrackForConditionalGeneration,
+    SongGenProcessor
+)
+import soundfile as sf
+
+ckpt_path = "..." # Path to the pretrained model
+device = "cuda:0" if torch.cuda.is_available() else "cpu"
+model = SongGenDualTrackForConditionalGeneration.from_pretrained(
+    ckpt_path,
+    attn_implementation='sdpa').to(device)
+processor = SongGenProcessor(ckpt_path, device)
+
+# Define input text and lyrics
+lyrics = "..." # The lyrics text
+text="..." # The music description text
+ref_voice_path = 'path/to/your/reference_audio.wav' # Path to reference audio, optional
+separate= True # Whether to separate the vocal track from the reference voice audio
+
+model_inputs = processor(text=text, lyrics=lyrics, ref_voice_path=ref_voice_path, separate=True) 
+generation = model.generate(**model_inputs,
+                do_sample=True,
+            )
+
+vocal_array = generation.vocal_sequences[0, :generation.vocal_audios_length[0]].cpu().numpy()
+acc_array = generation.acc_sequences[0, :generation.acc_audios_length[0]].cpu().numpy()
+min_len =min(vocal_array.shape[0], acc_array.shape[0])
+vocal_array = vocal_array[:min_len]
+acc_array = acc_array[:min_len]
+audio_arr = vocal_array + acc_array
+sf.write("songgen_out.wav", audio_arr, model.config.sampling_rate)
+```
+
 
 
 ## ❤️ Acknowledgments
