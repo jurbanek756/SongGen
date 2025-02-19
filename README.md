@@ -14,7 +14,7 @@
 </p>
 
 <p align="center" style="font-size: 5 em; margin-top: 0.5em">
-<a href=""><img src="https://img.shields.io/badge/arXiv-<color>"></a>
+<a href="https://arxiv.org/abs/2502.13128"><img src="https://img.shields.io/badge/arXiv-<color>"></a>
 <a href="https://github.com/LiuZH-19/SongGen"><img src="https://img.shields.io/badge/Code-red"></a>
 <a href="https://liuzh-19.github.io/SongGen/"><img src="https://img.shields.io/badge/Demo-yellow"></a>
 </p>
@@ -154,6 +154,15 @@ We deeply appreciate all the support we've received along the way.
 ## ✒️ Citation
 If you find our work helpful for your research, please consider giving a star ⭐ and citation 📝
 ```bibtex
+@misc{liu2025songgen,
+      title={SongGen: A Single Stage Auto-regressive Transformer for Text-to-Song Generation}, 
+      author={Zihan Liu and Shuangrui Ding and Zhixiong Zhang and Xiaoyi Dong and Pan Zhang and Yuhang Zang and Yuhang Cao and Dahua Lin and Jiaqi Wang},
+      year={2025},
+      eprint={2502.13128},
+      archivePrefix={arXiv},
+      primaryClass={cs.SD},
+      url={https://arxiv.org/abs/2502.13128}, 
+}
 
 ```
 
