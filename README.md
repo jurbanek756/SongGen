@@ -24,7 +24,7 @@
 
 
 ## 📜 News
-🚀 [2025/2/19] The [paper]() and [demo page](https://liuzh-19.github.io/SongGen/) are released!
+🚀 [2025/2/19] The [paper](https://arxiv.org/abs/2502.13128) and [demo page](https://liuzh-19.github.io/SongGen/) are released!
 
 ## 💡 Highlights
 - 🔥We introduce SongGen, a **single-stage** auto-regressive transformer for **text-to-song** generation, offering versatile control via lyrics, descriptive text, and an optional reference voice.
