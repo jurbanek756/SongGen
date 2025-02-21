@@ -199,3 +199,13 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+## License Agreement \& Disclaimer
+- The SongGen **code** is released under the **Apache License, Version 2.0**.  
+- The **model weights** and **annotated data** are licensed under the **CC-BY-NC license** due to copyright restrictions related to the MSD training data.  
+We apologize for any inconvenience this may cause.
+
+- **Disclaimer of Liability**:
+   - We do not assume any responsibility for the misuse of this model, including (but not limited to) illegal, malicious, or unethical activities.
+   - Users are solely responsible for any content generated using the SongGen model and for any consequences arising from its use.
+   - By using this model, you agree that you understand and comply with all applicable laws and regulations regarding your generated content.
