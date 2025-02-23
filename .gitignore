@@ -1,6 +1,5 @@
 __pycache__/
 .ipynb_checkpoints
-/songgen/modeling_songgen_dual_track.py
 /songgen/processing_songgen_old.py
 /songgen/xcodec_wrapper/xcodec
 /training/

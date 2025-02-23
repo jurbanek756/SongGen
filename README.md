@@ -128,11 +128,11 @@ generation = model.generate(**model_inputs,
                 do_sample=True,
             )
 
-vocal_array = generation.vocal_sequences[0, :generation.vocal_audios_length[0]].cpu().numpy()
-acc_array = generation.acc_sequences[0, :generation.acc_audios_length[0]].cpu().numpy()
+acc_array = generation[0].cpu().numpy()
+vocal_array = generation[1].cpu().numpy()
 min_len =min(vocal_array.shape[0], acc_array.shape[0])
-vocal_array = vocal_array[:min_len]
 acc_array = acc_array[:min_len]
+vocal_array = vocal_array[:min_len]
 audio_arr = vocal_array + acc_array
 sf.write("songgen_out.wav", audio_arr, model.config.sampling_rate)
 ```

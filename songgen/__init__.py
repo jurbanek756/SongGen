@@ -13,9 +13,10 @@ from .modeling_songgen_mixed import (
 )
 
 from .modeling_songgen_dual_track import (
-    SongGenDualTrakForConditionalGeneration,
+    SongGenDualTrackForConditionalGeneration,
     split_combined_track_input_ids,
     build_combined_delay_pattern_mask,
+    combine_track_input_ids
 )
 
 from .processing_songgen import SongGenProcessor

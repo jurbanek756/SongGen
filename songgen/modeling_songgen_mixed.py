@@ -33,7 +33,6 @@ from transformers.cache_utils import (
     SlidingWindowCache,
     StaticCache,
 )
-from transformers.generation.configuration_utils import GenerationConfig
 from transformers.generation.configuration_utils import GenerationConfig, GenerationMode
 from transformers.generation.logits_process import LogitsProcessorList
 from transformers.generation.stopping_criteria import StoppingCriteriaList
