@@ -2518,11 +2518,11 @@ class SongGenMixedForConditionalGeneration(PreTrainedModel):
             if argument.startswith("text_encoder_")
         }
 
-        kwargs_audio_encoder = {
-            argument[len("audio_encoder_") :]: value
-            for argument, value in kwargs.items()
-            if argument.startswith("audio_encoder_")
-        }
+        # kwargs_audio_encoder = {
+        #     argument[len("audio_encoder_") :]: value
+        #     for argument, value in kwargs.items()
+        #     if argument.startswith("audio_encoder_")
+        # }
 
         kwargs_decoder = {
             argument[len("decoder_") :]: value for argument, value in kwargs.items() if argument.startswith("decoder_")
@@ -2531,8 +2531,8 @@ class SongGenMixedForConditionalGeneration(PreTrainedModel):
         # remove text encoder, audio encoder and decoder kwargs from kwargs
         for key in kwargs_text_encoder.keys():
             del kwargs["text_encoder_" + key]
-        for key in kwargs_audio_encoder.keys():
-            del kwargs["audio_encoder_" + key]
+        # for key in kwargs_audio_encoder.keys():
+        #     del kwargs["audio_encoder_" + key]
         for key in kwargs_decoder.keys():
             del kwargs["decoder_" + key]
 
@@ -2565,37 +2565,34 @@ class SongGenMixedForConditionalGeneration(PreTrainedModel):
             text_encoder = AutoModelForTextEncoding.from_pretrained(
                 text_encoder_pretrained_model_name_or_path, *model_args, **kwargs_text_encoder
             )
-        
-        audio_encoder = kwargs_audio_encoder.pop("model", None)
-        if audio_encoder is None and audio_encoder_pretrained_model_name_or_path == 'xcodec':
-            audio_encoder = XCodecModel()
-        else:
-            if audio_encoder is None:
-                if audio_encoder_pretrained_model_name_or_path is None:
-                    raise ValueError(
-                        "If `audio_encoder_model` is not defined as an argument, an `audio_encoder_pretrained_model_name_or_path` has "
-                        "to be defined."
-                    )
 
-                if "config" not in kwargs_audio_encoder:
-                    encoder_config, kwargs_audio_encoder = AutoConfig.from_pretrained(
-                        audio_encoder_pretrained_model_name_or_path, **kwargs_audio_encoder, return_unused_kwargs=True
-                    )
+        # audio_encoder = kwargs_audio_encoder.pop("model", None)
+        # if audio_encoder is None:
+        #     if audio_encoder_pretrained_model_name_or_path is None:
+        #         raise ValueError(
+        #             "If `audio_encoder_model` is not defined as an argument, an `audio_encoder_pretrained_model_name_or_path` has "
+        #             "to be defined."
+        #         )
 
-                    if encoder_config.is_decoder is True or encoder_config.add_cross_attention is True:
-                        logger.info(
-                            f"Initializing {audio_encoder_pretrained_model_name_or_path} as an audio_encoder model "
-                            "from a decoder model. Cross-attention and casual mask are disabled."
-                        )
-                        encoder_config.is_decoder = False
-                        encoder_config.add_cross_attention = False
+        #     if "config" not in kwargs_audio_encoder:
+        #         encoder_config, kwargs_audio_encoder = AutoConfig.from_pretrained(
+        #             audio_encoder_pretrained_model_name_or_path, **kwargs_audio_encoder, return_unused_kwargs=True
+        #         )
 
-                    kwargs_audio_encoder["config"] = encoder_config
+        #         if encoder_config.is_decoder is True or encoder_config.add_cross_attention is True:
+        #             logger.info(
+        #                 f"Initializing {audio_encoder_pretrained_model_name_or_path} as an audio_encoder model "
+        #                 "from a decoder model. Cross-attention and casual mask are disabled."
+        #             )
+        #             encoder_config.is_decoder = False
+        #             encoder_config.add_cross_attention = False
 
-                audio_encoder = AutoModel.from_pretrained(
-                    audio_encoder_pretrained_model_name_or_path, *model_args, **kwargs_audio_encoder
-                )
-        
+        #         kwargs_audio_encoder["config"] = encoder_config
+
+        #     audio_encoder = AutoModel.from_pretrained(
+        #         audio_encoder_pretrained_model_name_or_path, *model_args, **kwargs_audio_encoder
+        #     )
+        audio_encoder = XCodecModel()
         
 
         decoder = kwargs_decoder.pop("model", None)

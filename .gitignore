@@ -1,9 +1,14 @@
 __pycache__/
 .ipynb_checkpoints
 /songgen/processing_songgen_old.py
-/songgen/xcodec_wrapper/xcodec
+/songgen/xcodec_wrapper/xcodec_infer
 /training/
 /jupyter
 /outputs
+/helpers
 requirement.txt
-setup.py
+# setup.py
+/scripts
+/wandb
+/build
+songgen.egg-info

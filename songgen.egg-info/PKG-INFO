@@ -1,3 +1,12 @@
+Metadata-Version: 2.1
+Name: songgen
+Version: 0.1
+Summary: Toolkit for using and training SongGen, a text-to-song model.
+Description-Content-Type: text/markdown
+Provides-Extra: dev
+Provides-Extra: train
+License-File: LICENSE.txt
+
 # SongGen: A Single Stage Auto-regressive Transformer for Text-to-Song Generation
 
 🚀🚀🚀 Official implementation of **SongGen: A Single Stage Auto-regressive Transformer for Text-to-Song Generation**
