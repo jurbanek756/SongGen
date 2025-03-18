@@ -3378,9 +3378,9 @@ class SongGenMixedForConditionalGeneration(PreTrainedModel):
 
                 if hasattr(self, 'lyrics_to_dec_proj'):
                     logger.info("- lyrics_to_dec_proj")
-                    for param in self.lyrics_affine_layer.parameters():
+                    for param in self.lyrics_to_dec_proj.parameters():
                         param.requires_grad = False
-                    self.lyrics_affine_layer._requires_grad = False 
+                    self.lyrics_to_dec_proj._requires_grad = False 
     
 
     def freeze_embed_prompts(self, freeze_embed_prompts=True):

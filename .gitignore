@@ -1,11 +1,13 @@
 __pycache__/
 .ipynb_checkpoints
 /songgen/processing_songgen_old.py
-/songgen/xcodec_wrapper/xcodec_infer
+/songgen/xcodec_wrapper/xcodec_infer/ckpts/general_more/xcodec_hubert_general_audio_v2.pth
+/songgen/xcodec_wrapper/xcodec_infer/ckpts/requirement.txt
 /training/
 /jupyter
 /outputs
 /helpers
+/helpers/push_to_hub_scripts
 requirement.txt
 # setup.py
 /scripts

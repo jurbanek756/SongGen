@@ -24,6 +24,8 @@
 
 
 ## 📜 News
+🚀 [2025/3/18] We released the checkpoint of SongGen Mixed_Pro at [Huggingface🤗](https://huggingface.co/LiuZH-19/SongGen_mixed_pro).
+
 🚀 [2025/2/19] The [paper](https://arxiv.org/abs/2502.13128) and [demo page](https://liuzh-19.github.io/SongGen/) are released!
 
 ## 💡 Highlights
@@ -39,7 +41,8 @@
 - [ ] Release annotated data and preprocessing pipeline
 - [ ] Release SongGen training code
 - [ ] Develop an audio upsampling renderer
-- [ ] Release SongGen checkpoints
+- [ ] Release SongGen (Interleaving A-V) checkpoint
+- [x] Release SongGen Mixed_pro checkpoint
 - [x] Release SongGen inference code 
 - [x] SongGen demo
 
@@ -60,8 +63,19 @@ To use SongGen only in inference mode, install it using:
 ```bash
 pip install -e .
 ```
-### 2. Download the xcodec and songgen checkpoints
+### 2. Download the xcodec
 
+Download the X-Codec checkpoint from [🤗](
+https://huggingface.co/ZhenYe234/xcodec/blob/main/xcodec_hubert_general_audio_v2.pth) and place it in the following directory : SongGen/songgen/xcodec_wrapper/xcodec_infer/ckpts/general_more
+
+```
+xcodec_infer
+    ├── ckpts
+    │   └── general_more
+    │       ├── config_hubert_general.yaml
+    │       └── xcodec_hubert_general_audio_v2.pth
+
+```
 
 ### 3. Run the inference
 
@@ -77,7 +91,7 @@ from songgen import (
 )
 import soundfile as sf
 
-ckpt_path = "..." # Path to the pretrained model
+ckpt_path = "LiuZH-19/SongGen_mixed_pro" # Path to the pretrained model
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 model = SongGenMixedForConditionalGeneration.from_pretrained(
     ckpt_path,
@@ -86,11 +100,11 @@ processor = SongGenProcessor(ckpt_path, device)
 
 # Define input text and lyrics
 lyrics = "..." # The lyrics text
-text="..." # The music description text
+text = "..." # The music description text
 ref_voice_path = 'path/to/your/reference_audio.wav' # Path to reference audio, optional
 separate= True # Whether to separate the vocal track from the reference voice audio
 
-model_inputs = processor(text=text, lyrics=lyrics, ref_voice_path=ref_voice_path, separate=True) 
+model_inputs = processor(text=text, lyrics=lyrics, ref_voice_path=ref_voice_path, separate=separate) 
 generation = model.generate(**model_inputs,
                 do_sample=True,
             )
@@ -120,7 +134,7 @@ processor = SongGenProcessor(ckpt_path, device)
 
 # Define input text and lyrics
 lyrics = "..." # The lyrics text
-text="..." # The music description text
+text = "..." # The music description text
 ref_voice_path = 'path/to/your/reference_audio.wav' # Path to reference audio, optional
 separate= True # Whether to separate the vocal track from the reference voice audio
 
@@ -151,6 +165,12 @@ Special thanks to:
 
 We deeply appreciate all the support we've received along the way.
 
+## ☎️ Limitation and Future Work
+
+This is a **research work** focused on **text-to-song** generation. Due to the limitations of the current training dataset, our model is currently restricted to generating English songs with a maximum duration of 30 seconds.
+However, despite being trained on only **2k hours** of data with a **1.3B** parameter model, our approach has demonstrated strong effectiveness and promising potential in generating coherent and expressive songs. We believe that scaling up both data and model size will further enhance lyrics alignment and musicality.
+That being said, scaling the dataset is time-consuming and challenging. We welcome collaborations and discussions to explore new ways to improve the model and extend its capabilities.
+For any inquiries or potential collaborations, feel free to reach out: Zihan Liu (liuzihan@pjlab.org.cn) and Jiaqi Wang (wangjiaqi@pjlab.org.cn).
 
 ## ✒️ Citation
 If you find our work helpful for your research, please consider giving a star ⭐ and citation 📝
